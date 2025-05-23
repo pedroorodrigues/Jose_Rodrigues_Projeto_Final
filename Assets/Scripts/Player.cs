@@ -1,11 +1,10 @@
 ﻿using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.InputSystem;
 
 public class Player : MonoBehaviour, IDamageable
 {
-    public static Player instance;
-
     private Animator animator;
     private SpriteRenderer spriteRenderer;
     private bool isGrounded;
@@ -23,13 +22,10 @@ public class Player : MonoBehaviour, IDamageable
     [SerializeField] private float rightRayDistance;
     [SerializeField] private float leftRayDistance;
 
+    private Vector2 _moveInput;
+
     private void Awake()
     {
-        if (instance == null)
-            instance = this;
-        else
-            Destroy(gameObject);
-
         _rigidBody = GetComponent<Rigidbody2D>();
         spriteRenderer = GetComponent<SpriteRenderer>();
         animator = GetComponent<Animator>();
@@ -46,20 +42,44 @@ public class Player : MonoBehaviour, IDamageable
         Debug.DrawRay(transform.position + Vector3.left * leftRayDistance, Vector2.down * groundCheckDistance, Color.red);
         Debug.DrawRay(transform.position + Vector3.right * rightRayDistance, Vector2.down * groundCheckDistance, Color.red);
 
-        float horizontalInput = Input.GetAxisRaw("Horizontal");
-
-        animator.SetFloat("Walk", Mathf.Abs(horizontalInput));
-        animator.SetBool("isGrounded", isGrounded);
-
-        if (horizontalInput > 0)
-            spriteRenderer.flipX = false;
-        else if (horizontalInput < 0)
-            spriteRenderer.flipX = true;
-
-        Jump();
         GroundCheck();
 
-        _rigidBody.velocity = new Vector2(horizontalInput * movementSpeed, _rigidBody.velocity.y);
+        float _horizontalInput = _moveInput.x;
+
+        animator.SetFloat("Walk", Mathf.Abs(_horizontalInput));
+        animator.SetBool("isGrounded", isGrounded);
+
+        if (_horizontalInput > 0)
+            spriteRenderer.flipX = false;
+        else if (_horizontalInput < 0)
+            spriteRenderer.flipX = true;
+
+        _rigidBody.velocity = new Vector2(_horizontalInput * movementSpeed, _rigidBody.velocity.y);
+    }
+
+    public void SetDirection(InputAction.CallbackContext context)
+    {
+        _moveInput = context.ReadValue<Vector2>();
+    }
+
+    public void SetJump(InputAction.CallbackContext context)
+    {
+        if (context.performed && isGrounded)
+        {
+            animator.SetTrigger("Jump");
+            _rigidBody.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
+
+            UiManager.instance.JumpCooldownTimer();
+            forceUnground = true;
+
+            _canDie = false;
+            GameManager.Instance.CantDie();
+
+            Invoke(nameof(EnableGroundAgain), 2f);
+            Invoke(nameof(AllowDieAgain), 0.5f);
+
+            GameManager.Instance.Switch();
+        }
     }
 
     public void Die()
@@ -77,40 +97,13 @@ public class Player : MonoBehaviour, IDamageable
         isGrounded = (hit.collider != null || hit2.collider != null) && !forceUnground;
     }
 
-    private void Jump()
-    {
-        if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
-        {
-            animator.SetTrigger("Jump");
-            _rigidBody.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
-
-            UiManager.instance.JumpCooldownTimer();
-            forceUnground = true;
-
-            _canDie = false;
-            GameManager.instance.CantDie();
-
-            Invoke(nameof(EnableGroundAgain), 2f);
-            Invoke(nameof(AllowDieAgain), 0.5f);
-            
-
-            GameManager.instance.Switch();
-        }
-    }
-
-    private void EnableGroundAgain()
-    {
-        forceUnground = false;
-    }
+    private void EnableGroundAgain() => forceUnground = false;
 
     private void AllowDieAgain()
     {
-        GameManager.instance.CanDie();
+        GameManager.Instance.CanDie();
         _canDie = true;
     }
 
-    public void player()
-    {
-        _rigidBody.gravityScale = 0.3f;
-    }
+    public void player() => _rigidBody.gravityScale = 0.3f;
 }

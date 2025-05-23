@@ -13,12 +13,12 @@ public class Bullet : MonoBehaviour
 
     private void Awake()
     {
-        _rigidBody = GetComponent<Rigidbody2D>();
-        Go();
-        if (GameManager.instance.Time == false)
-        {
-            _rigidBody.gravityScale = 0;
-        }
+        //_rigidBody = GetComponent<Rigidbody2D>();
+        //Go();
+        //if (GameManager.Instance.Time == false)
+        //{
+        //    _rigidBody.gravityScale = 0;
+        //}
     }
  
     public void Go()
@@ -31,7 +31,7 @@ public class Bullet : MonoBehaviour
         Player playerDetected = collision.GetComponent<Player>();
         if (playerDetected != null)
         {
-            GameManager.instance.GameOver();
+            GameManager.Instance.GameOver();
             Destroy(gameObject);
         }
         Destroy(gameObject);

@@ -26,7 +26,7 @@ public class Coin : MonoBehaviour, ICollectible
     private IEnumerator GetCoin()
     {
         _animator.SetTrigger("Get");
-        GameManager.instance.GetCoin();
+        GameManager.Instance.GetCoin();
         yield return new WaitForSeconds(1.2f);
         Destroy(gameObject);
     }

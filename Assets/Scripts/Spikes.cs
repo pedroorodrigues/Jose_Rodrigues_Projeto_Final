@@ -7,7 +7,7 @@ public class Spikes : MonoBehaviour
         IDamageable damageable = collision.GetComponent<IDamageable>();
         if (damageable != null)
         {
-            GameManager.instance.GameOver();
+            GameManager.Instance.GameOver();
             damageable.Die();
         }
     }

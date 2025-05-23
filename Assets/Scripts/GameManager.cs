@@ -1,100 +1,92 @@
-using System;
 using System.Collections;
-using System.Collections.Generic;
-using UnityEditor.SearchService;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
-    public static GameManager instance;
-    private Platforms _platforms;
+    public static GameManager Instance;
+
     private Player _player;
-    private bool _time;
-    private Animator _animator;
-    private bool _canDie;
-    [SerializeField] Bullet _bullet;
+    private Platforms _platforms;
+    private bool _time = true;
+    private bool _canDie = true;
+
     [SerializeField] private GameObject _present;
     [SerializeField] private GameObject _future;
-    [SerializeField] private Image _loseS;
-    [SerializeField] private Box _box;
     [SerializeField] private int _coins;
-
-    public bool Time { get => _time; set => _time = value; }
 
     private void Awake()
     {
-        if (instance == null)
+        if (Instance == null)
         {
-            instance = this;
+            Instance = this;
+
         }
         else
         {
             Destroy(gameObject);
         }
     }
-    void Start()
+
+    private void Start()
     {
-        _player = Player.instance;
+        _player = FindObjectOfType<Player>();
         _platforms = GetComponent<Platforms>();
-        _bullet = GetComponent<Bullet>();
-        _box = GetComponent<Box>();
         _coins = 0;
     }
 
-
     public void Switch()
     {
-        if (_time == true)
+        Rigidbody2D[] rigidbody2Ds = FindObjectsOfType<Rigidbody2D>();
+
+        if (_time)
         {
             _future.SetActive(true);
             _present.SetActive(false);
-            Rigidbody2D[] rigidbody2Ds = FindObjectsOfType<Rigidbody2D>();
-            for (int i = 0; i < rigidbody2Ds.Length; i++)
-            {
-                rigidbody2Ds[i].gravityScale = 0f;
-                Player.instance.player();
-                
-            }
+
+            foreach (var rb in rigidbody2Ds)
+                rb.gravityScale = 0f;
+
+            if (_player != null)
+                _player.player();
+
             _time = false;
         }
-        else 
+        else
         {
             _future.SetActive(false);
             _present.SetActive(true);
-            Rigidbody2D[] rigidbody2Ds = FindObjectsOfType<Rigidbody2D>();
-            for (int i = 0; i < rigidbody2Ds.Length; i++)
-            {
-                rigidbody2Ds[i].gravityScale = 1;
-               
-                
-            }
+
+            foreach (var rb in rigidbody2Ds)
+                rb.gravityScale = 1f;
+
             _time = true;
         }
     }
 
     public void GameOver()
     {
-        if (_canDie == true)
-        { 
-        StartCoroutine(Lose());
+        if (_canDie)
+        {
+            StartCoroutine(Lose());
         }
-      
     }
+
     public void GetCoin()
     {
         _coins++;
-        if (_coins == 3)
+        if (_coins >= 3)
         {
             LoadNextScene();
-            print("win");
+            Debug.Log("Win!");
         }
     }
+
     public void CanDie()
     {
         _canDie = true;
     }
+
     public void CantDie()
     {
         _canDie = false;
@@ -107,10 +99,11 @@ public class GameManager : MonoBehaviour
         SceneManager.LoadScene(0);
         UiManager.instance.spiral();
     }
+
     public void LoadNextScene()
     {
         int currentSceneIndex = SceneManager.GetActiveScene().buildIndex;
-        int nextSceneIndex = currentSceneIndex + 1; 
+        int nextSceneIndex = currentSceneIndex + 1;
 
         if (nextSceneIndex < SceneManager.sceneCountInBuildSettings)
         {
@@ -118,12 +111,7 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            print("Você completou todos os níveis!");
-           
+            Debug.Log("Você completou todos os níveis!");
         }
     }
-
-
 }
-
-

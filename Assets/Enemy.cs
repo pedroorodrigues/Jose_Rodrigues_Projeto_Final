@@ -1,33 +1,32 @@
-using System;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using static UnityEngine.GraphicsBuffer;
 
 public class Enemy : MonoBehaviour
 {
-    void Start()
+    [SerializeField] private float fireRate = 1.5f;
+    [SerializeField] private Transform firePoint;
+
+    private void Start()
     {
-        StartCoroutine(bullets());
+        StartCoroutine(ShootOnceAndRepeat());
     }
-    void Update()
+
+    private IEnumerator ShootOnceAndRepeat()
     {
-        
+        yield return new WaitForSeconds(fireRate);
+
+        FireBullet();
+        StartCoroutine(ShootOnceAndRepeat());
     }
-    private IEnumerator bullets()
+
+    private void FireBullet()
     {
-        yield return new WaitForSeconds(0.5f);
         GameObject bullet = ObjectPool.instance.GetPooledObject();
         if (bullet != null)
         {
-            bullet.transform.position = transform.position;
+            bullet.transform.position = firePoint != null ? firePoint.position : transform.position;
+            bullet.transform.rotation = Quaternion.identity;
             bullet.SetActive(true);
         }
-        yield return new WaitForSeconds(1);
-        StartCoroutine(bullets());
-        yield return new WaitForSeconds(1);
-        bullet.SetActive(false);
-
-
     }
 }
